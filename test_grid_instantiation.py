@@ -1,6 +1,10 @@
 import squaredleGrid    # The code to test
 import pytest
 
+
+# Unit tests to ensure robust instantiation of the Squaredle Grid object, regardless of
+# the inputs provided
+
 def test_sg_object_creation_3x3():
     inputGrid = [['a','b','c'],
                  ['d','e','f'],
@@ -22,6 +26,8 @@ def test_sg_object_creation_3x3():
                              [0,0,0,1,1,1,1,0,1],
                              [0,0,0,0,1,1,0,1,0]]
     
+    # instantiation of a grid which contains empty items (holes)
+    # Paths cannot traverse holes
 def test_sg_object_creation_3x3_hole_in_middle():
     # adjacency matrix should avoid creating edges where
     # there are 'holes' in the grid
@@ -45,7 +51,8 @@ def test_sg_object_creation_3x3_hole_in_middle():
                              [0,0,0,1,0,1,1,0,1],
                              [0,0,0,0,0,1,0,1,0]]
     
-
+# Inputs should be all uppercase. Lower case entries are allowed,
+# but are converted to uppercase.
 def test_sg_object_creation_lower_case_grid():
     # inputGrid and dictionary should be uppercase
     # in the squaredle object
@@ -59,6 +66,9 @@ def test_sg_object_creation_lower_case_grid():
                        ['G','H','I']]
     assert sg.dictionaryList==["HELLO", "WORLD"]
 
+# Invalid instantiation because the 2D grid is not
+# rectangular. That is, not all rows have the same
+# length
 def test_sg_object_creation_ivalid_2D_grid_01():
     inputGrid = [['A','B','C'],
                  ['D','E','F'],
@@ -68,7 +78,7 @@ def test_sg_object_creation_ivalid_2D_grid_01():
     with pytest.raises(Exception) as excinfo:
         sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
     assert excinfo.type == ValueError
-    assert str(excinfo.value) == "2D grid not rectangular"
+    assert str(excinfo.value) == "Invalid Input: 2D grid not rectangular"
 
 def test_sg_object_creation_ivalid_2D_grid_02():
     inputGrid = [['A','B','C'],
@@ -79,7 +89,7 @@ def test_sg_object_creation_ivalid_2D_grid_02():
     with pytest.raises(Exception) as excinfo:
         sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
     assert excinfo.type == ValueError
-    assert str(excinfo.value) == "2D grid not rectangular"
+    assert str(excinfo.value) == "Invalid Input: 2D grid not rectangular"
 
 def test_sg_object_creation_ivalid_2D_grid_03():
     inputGrid = [[],
@@ -90,9 +100,9 @@ def test_sg_object_creation_ivalid_2D_grid_03():
     with pytest.raises(Exception) as excinfo:
         sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
     assert excinfo.type == ValueError
-    assert str(excinfo.value) == "2D grid not rectangular"
+    assert str(excinfo.value) == "Invalid Input: 2D grid not rectangular"
 
-def test_sg_object_creation_ivalid_2D_grid_04():
+def test_sg_object_creation_invalid_2D_grid_04A():
     # 2x1 grid is smaller than minimum allowable grid (2x2). Exception
     # should be thrown when instantiating squaredle object
     inputGrid = [['A'],
@@ -102,7 +112,26 @@ def test_sg_object_creation_ivalid_2D_grid_04():
     with pytest.raises(Exception) as excinfo:
         sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
     assert excinfo.type == ValueError
-    assert str(excinfo.value) == "Invalid Grid: Less than 2x2"
+    assert str(excinfo.value) == "Invalid Input: grid less than minimum size"
+
+def test_sg_object_creation_ivalid_2D_grid_04B():
+    # Verify that an empty list is rejected
+    inputGrid = []
+    dictionaryList=["Hello", "woRld"]
+    
+    with pytest.raises(Exception) as excinfo:
+        sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
+    assert excinfo.type == ValueError
+    assert str(excinfo.value) == "Invalid Input: empty list"
+
+def test_sg_object_creation_ivalid_2D_grid_04C():
+    # Verify the input grid is of type 'list', or inherits from 'list'
+    inputGrid = "Hello World"
+    dictionaryList=["Hello", "woRld"]
+    with pytest.raises(Exception) as excinfo:
+        sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
+    assert excinfo.type == ValueError
+    assert str(excinfo.value) == "Invalid Input: grid not type 'list'"
 
 def test_sg_object_creation_ivalid_2D_grid_05A():
     #minimum valid grid (2x2)
@@ -173,7 +202,7 @@ def test_sg_object_creation_ivalid_2D_grid_08():
     with pytest.raises(Exception) as excinfo:
         sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
     assert excinfo.type == ValueError
-    assert str(excinfo.value) == "not 2D"
+    assert str(excinfo.value) == "Invalid Input: not 2D list"
 
 def test_sg_object_creation_invalid_grid_contents_01():
     # Only single characters [A-Za-z] or '' allowed in grid
@@ -184,7 +213,7 @@ def test_sg_object_creation_invalid_grid_contents_01():
     with pytest.raises(Exception) as excinfo:
         sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
     assert excinfo.type == ValueError
-    assert str(excinfo.value) == "Invalid Grid contents: Must be single characters [A-Z] or ''"
+    assert str(excinfo.value) == "Invalid Input: grid must contain only single characters [A-Z] or ''"
 
 def test_sg_object_creation_invalid_grid_contents_02():
     # Only single characters [A-Za-z] or '' allowed in grid
@@ -195,5 +224,57 @@ def test_sg_object_creation_invalid_grid_contents_02():
     with pytest.raises(Exception) as excinfo:
         sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
     assert excinfo.type == ValueError
-    assert str(excinfo.value) == "Invalid Grid contents: Must be single characters [A-Z] or ''"
+    assert str(excinfo.value) == "Invalid Input: grid must contain only single characters [A-Z] or ''"
 
+def test_sg_object_creation_invalid_dictionary_not_sorted():
+    # Only single characters [A-Za-z] or '' allowed in grid
+    inputGrid = [['a','b','c'],
+                 ['d','','F'],
+                 ['G','h','i']]
+    dictionaryList=["World", "Hello"]
+    with pytest.raises(Exception) as excinfo:
+        sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
+    assert excinfo.type == ValueError
+    assert str(excinfo.value) == "Invalid Input: dictionary not sorted"
+
+def test_sg_object_creation_invalid_dictionary_empty_list():
+    # Only single characters [A-Za-z] or '' allowed in grid
+    inputGrid = [['a','b','c'],
+                 ['d','','F'],
+                 ['G','h','i']]
+    dictionaryList=[]
+    with pytest.raises(Exception) as excinfo:
+        sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
+    assert excinfo.type == ValueError
+    assert str(excinfo.value) == "Invalid Input: empty dictionary"
+
+def test_sg_object_creation_dictionary_has_only_one_entry():
+    # Only single characters [A-Za-z] or '' allowed in grid
+    inputGrid = [['a','b','c'],
+                 ['d','','F'],
+                 ['G','h','i']]
+    dictionaryList=["World"]
+    sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
+    assert sg.dictionaryList == ["WORLD"]
+
+def test_sg_object_creation_dictionary_not_a_list():
+    # Only single characters [A-Za-z] or '' allowed in grid
+    inputGrid = [['a','b','c'],
+                 ['d','','F'],
+                 ['G','h','i']]
+    dictionaryList="Hello"
+    with pytest.raises(Exception) as excinfo:
+        sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
+    assert excinfo.type == ValueError
+    assert str(excinfo.value) == "Invalid Input: dictionary not type 'list'"
+
+def test_sg_object_creation_grid_contains_numbers():
+    # Only single characters [A-Za-z] or '' allowed in grid
+    inputGrid = [['a','b','c'],
+                 ['d','','F'],
+                 ['G',7,'i']]
+    dictionaryList=["Hello", "World"]
+    with pytest.raises(Exception) as excinfo:
+        sg = squaredleGrid.squaredleGrid(inputGrid, dictionaryList)
+    assert excinfo.type == ValueError
+    assert str(excinfo.value) == "Invalid Input: grid entries not strings"

@@ -1,45 +1,92 @@
+import sys
+
+MIN_GRID_ROWS = 2
+MIN_GRID_COLS = 2
+MAX_GRID_SIZE = 100
 
 class squaredleGrid(object):
-    def __new__(cls, inputGridArray, dictionaryList):
-        print("Creating instance")
-
-        # make sure the grid array is legitimate (rectangular 2D grid)
-
-        if not squaredleGrid._is2dList(inputGridArray):
-            raise ValueError('not 2D')
-
-        if any(len(i) != len(inputGridArray[0]) for i in inputGridArray[1:]):
-            raise ValueError('2D grid not rectangular')
-
-        return super(squaredleGrid, cls).__new__(cls)
+    # def __new__(cls, inputGridArray, dictionaryList):
+    #     print("Creating instance")
+    #     return super(squaredleGrid, cls).__new__(cls)
 
 
     def __init__(self, inputGridArray, dictionaryList):
-        #todo: handle capitalization
-        print("initializing instance")
-        self.grid = [[character.upper() for character in row] for row in inputGridArray]
-        self.dictionaryList = [x.upper() for x in dictionaryList]
+
+        try:
+            self.grid = self._validateGrid(inputGridArray)
+        except (ValueError, TypeError) as e:
+            raise ValueError('Invalid Input: '+str(e))
+        try:
+            self.dictionaryList = self._validateDictionaryList(dictionaryList)
+        except(ValueError, TypeError) as e:
+            raise ValueError('Invalid Input: '+str(e))
+
         self.rows = len(self.grid)
         self.cols = len(self.grid[0])
-        if self.rows < 2 or self.cols < 2:
-            raise ValueError('Invalid Grid: Less than 2x2')
-        if (self.rows * self.cols) > 100:
-            raise ValueError('Invalid Grid: Too large to process')
         self.flatGrid = [item for sublist in self.grid for item in sublist]
 
-        # make sure the grid items are single, ASCII characters
-        if not all(isinstance(item, str) and len(item) in [0,1] and ('A' <= item <= 'Z' or item == '') for item in self.flatGrid):
-            raise ValueError("Invalid Grid contents: Must be single characters [A-Z] or ''")
-
         self.adj_matrix = self.create_adj_matrix(self.grid)
-        if self._emptyAdjacency(self.adj_matrix):
+        # make sure the adjacency matrix isn't empty (no paths can be traversed)
+        if all(all(element == 0 for element in row) for row in self.adj_matrix):
             raise ValueError('Invalid input Grid - empty adjacency')
 
-    # Function to determine if an adjacency matrix is empty ()
-    def _emptyAdjacency(self, adj):
-        if all(all(element == 0 for element in row) for row in adj):
-            return True
-        return False
+    def _validateGrid(self, grid):
+
+        # make sure it's a list or decendent of type list
+        if not isinstance(grid,list):
+             raise ValueError("grid not type 'list'") 
+        
+        # make sure the grid is not empty
+        if len(grid) == 0:
+             raise ValueError("empty list") 
+
+        # make sure the list is a 2D list (list of lists)
+        if not squaredleGrid._is2dList(grid):
+            raise ValueError('not 2D list')
+        
+        # make sure the list is regular (all rows have same length)
+        if any(len(i) != len(grid[0]) for i in grid[1:]):
+            raise ValueError('2D grid not rectangular')
+        
+        if len(grid) < MIN_GRID_ROWS or len(grid[0]) < MIN_GRID_COLS:
+            raise ValueError('grid less than minimum size')
+        
+        if (len(grid) * len(grid[0])) > MAX_GRID_SIZE:
+            raise ValueError('grid larger than maximum')
+    
+        # make sure the grid items are strings (or inherited from 'str')
+        if not all(isinstance(item, str) for item in [item for sublist in grid for item in sublist]):
+            raise ValueError("grid entries not strings")
+
+        # make uppercase
+        grid = [[character.upper() for character in row] for row in grid]
+        #flatGrid = [item for sublist in grid for item in sublist]
+
+        # make sure the grid items are strings (or inherited from 'str') and are are single, characters, A-Z or ''
+        if not all(len(item) in [0,1] and ('A' <= item <= 'Z' or item == '') for item in [item for sublist in grid for item in sublist]):
+            raise ValueError("grid must contain only single characters [A-Z] or ''")
+        return grid
+    
+
+    def _validateDictionaryList(self, dictionary):
+        # make sure it's a list or decendent of type list
+        if not isinstance(dictionary,list):
+             raise ValueError("dictionary not type 'list'") 
+
+        # Make sure the dictionary isn't an empty list
+        if len(dictionary) == 0:
+            raise ValueError("empty dictionary")
+        
+        # make dictionary uppercase
+        dictionary = [x.upper() for x in dictionary]
+
+        # make sure the dictionary is sorted in ascending order
+        if not all(dictionary[i] <= dictionary[i + 1] for i in range(len(dictionary) - 1)):
+            raise ValueError("dictionary not sorted")
+        
+        return dictionary
+
+
 
     # Function to determine if a list has lists for elements (2D). It is called
     # in __new__ (before 'self' exits).
